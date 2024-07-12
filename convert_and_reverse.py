@@ -390,6 +390,7 @@ class ReverseVideoWorker(QObject):
     def run(self):
         self.extract_frame()
         self.reverse_file()
+        self.progress.emit(100)
         self.finished.emit()
 
     def extract_frame(self):
