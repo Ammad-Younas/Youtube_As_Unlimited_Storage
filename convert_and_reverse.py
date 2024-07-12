@@ -56,7 +56,7 @@ class GenerateAndReverse(QWidget):
         self.browse_button.clicked.connect(self.choose_file_generate_video)
 
         self.generate_video = QPushButton("Start Processing...", self.generate_video_frame)
-        self.generate_video.setGeometry(20, 110, 200, 40)
+        self.generate_video.setGeometry(20, 200, 200, 40)
         self.generate_video.setStyleSheet("""
             QPushButton {
                 background-color: white;
@@ -78,14 +78,14 @@ class GenerateAndReverse(QWidget):
 
 
         self.output_put_binary_video = QLineEdit(self.generate_video_frame)
-        self.output_put_binary_video.setGeometry(20, 200, 1000, 40)
+        self.output_put_binary_video.setGeometry(20, 120, 1000, 40)
         self.output_put_binary_video.setPlaceholderText("Choose path for output video...")
         self.output_put_binary_video.setStyleSheet("background-color: none; border: 1px solid lightgray; border-top-left-radius: 7px; border-top-right-radius: 7px; border-bottom-left-radius: 0px; border-bottom-right-radius: 0px; border-bottom: 1px solid black; padding: 7px;")
         self.output_put_binary_video.setFont(QFont("Times New Roman", 13))
         self.output_put_binary_video.setDisabled(True)
 
         self.browse_output_video_button = QPushButton("Browse", self.generate_video_frame)
-        self.browse_output_video_button.setGeometry(1050, 200, 200, 40)
+        self.browse_output_video_button.setGeometry(1050, 120, 200, 40)
         self.browse_output_video_button.setStyleSheet("""
             QPushButton {
                 background-color: white;
@@ -107,7 +107,7 @@ class GenerateAndReverse(QWidget):
 
 
         self.progress_bar = QProgressBar(self.generate_video_frame)
-        self.progress_bar.setGeometry(230, 120, 1022, 20)
+        self.progress_bar.setGeometry(230, 210, 1022, 20)
         self.progress_bar.setStyleSheet("""
             QProgressBar {
                 border: 1px solid lightgray;
@@ -159,7 +159,7 @@ class GenerateAndReverse(QWidget):
         self.browse_reverse.clicked.connect(self.choose_file_reverse_video)
 
         self.generate_reverse = QPushButton("Start Processing...", self.reverse_to_original)
-        self.generate_reverse.setGeometry(20, 110, 200, 40)
+        self.generate_reverse.setGeometry(20, 200, 200, 40)
         self.generate_reverse.setStyleSheet("""
             QPushButton {
                 background-color: white;
@@ -180,7 +180,7 @@ class GenerateAndReverse(QWidget):
 
 
         self.reverse_output_file_path = QLineEdit(self.reverse_to_original)
-        self.reverse_output_file_path.setGeometry(20, 200, 1000, 40)
+        self.reverse_output_file_path.setGeometry(20, 120, 1000, 40)
         self.reverse_output_file_path.setPlaceholderText("Choose path for orignal file...")
         self.reverse_output_file_path.setStyleSheet("background-color: none; border: 1px solid lightgray; border-top-left-radius: 7px; border-top-right-radius: 7px; border-bottom-left-radius: 0px; border-bottom-right-radius: 0px; border-bottom: 1px solid black; padding: 10px;")
         self.reverse_output_file_path.setFont(QFont("Times New Roman", 13))
@@ -188,7 +188,7 @@ class GenerateAndReverse(QWidget):
 
 
         self.browse_folder_for_output_orignal_file = QPushButton("Browse", self.reverse_to_original)
-        self.browse_folder_for_output_orignal_file.setGeometry(1050, 200, 200, 40)
+        self.browse_folder_for_output_orignal_file.setGeometry(1050, 120, 200, 40)
         self.browse_folder_for_output_orignal_file.setStyleSheet("""
             QPushButton {
                 background-color: white;
@@ -211,7 +211,7 @@ class GenerateAndReverse(QWidget):
 
 
         self.progress_reverse = QProgressBar(self.reverse_to_original)
-        self.progress_reverse.setGeometry(230, 120, 1022, 20)
+        self.progress_reverse.setGeometry(230, 210, 1022, 20)
         self.progress_reverse.setStyleSheet("""
             QProgressBar {
                 border: 1px solid lightgray;
@@ -416,7 +416,7 @@ class ReverseVideoWorker(QObject):
         blocks_per_column = height // block_size
         total_blocks_per_frame = blocks_per_row * blocks_per_column
 
-        total_frames = 1
+        total_frames = 0
         while True:
             try:
                 Image.open(os.path.join(self.output, 'Extracted_Frames', f'frame_{total_frames:09d}.png'))
