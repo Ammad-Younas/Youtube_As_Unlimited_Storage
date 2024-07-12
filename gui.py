@@ -75,6 +75,37 @@ class GenerateAndReverse(QWidget):
         self.generate_video.setCursor(Qt.PointingHandCursor)
         self.generate_video.clicked.connect(self.start_generate_video_thread)
 
+
+
+        self.output_put_binary_video = QLineEdit(self.generate_video_frame)
+        self.output_put_binary_video.setGeometry(20, 200, 1000, 40)
+        self.output_put_binary_video.setPlaceholderText("Choose path for output video...")
+        self.output_put_binary_video.setStyleSheet("background-color: none; border: 1px solid lightgray; border-top-left-radius: 7px; border-top-right-radius: 7px; border-bottom-left-radius: 0px; border-bottom-right-radius: 0px; border-bottom: 1px solid black; padding: 7px;")
+        self.output_put_binary_video.setFont(QFont("Times New Roman", 13))
+        self.output_put_binary_video.setDisabled(True)
+
+        self.browse_output_video_button = QPushButton("Browse", self.generate_video_frame)
+        self.browse_output_video_button.setGeometry(1050, 200, 200, 40)
+        self.browse_output_video_button.setStyleSheet("""
+            QPushButton {
+                background-color: white;
+                color: black;
+                border-radius: 23px;
+                border: 1px solid black;
+            }
+            QPushButton:hover {
+                background-color: black;
+                color: white;
+                border-radius: 23px;
+                border: 1px solid black;
+            }
+        """)
+        self.browse_output_video_button.setFont(QFont("Times New Roman", 13))
+        self.browse_output_video_button.setCursor(Qt.PointingHandCursor)
+        self.browse_output_video_button.clicked.connect(self.choose_path_for_output_video)
+
+
+
         self.progress_bar = QProgressBar(self.generate_video_frame)
         self.progress_bar.setGeometry(230, 120, 1022, 20)
         self.progress_bar.setStyleSheet("""
@@ -178,12 +209,24 @@ class GenerateAndReverse(QWidget):
             self.choose_file_reverse.setText(self.file_path_reverse)
             self.choose_file_reverse.setEnabled(False)
 
+
+    def choose_path_for_output_video(self):
+        file_dialog = QFileDialog()
+        self.output_path = file_dialog.getExistingDirectory(self, "Choose a folder for output video...")
+        if self.output_path:
+            self.output_put_binary_video.setEnabled(True)
+            self.output_put_binary_video.setText(self.output_path)
+            self.output_put_binary_video.setEnabled(False)
+
+
     def start_generate_video_thread(self):
         if self.choose_file_entry.text() == '':
             QMessageBox.warning(self, 'Warning', 'Please choose a file first')
+        elif self.output_put_binary_video.text() == '':
+            QMessageBox.warning(self, 'Warning', 'Please choose a path for output video')
         else:
             self.thread = QThread()
-            self.worker = GenerateVideoWorker(self.file_path)
+            self.worker = GenerateVideoWorker(self.file_path, self.output)
             self.worker.moveToThread(self.thread)
             self.thread.started.connect(self.worker.run)
             self.worker.progress.connect(self.progress_bar.setValue)
@@ -209,10 +252,10 @@ class GenerateAndReverse(QWidget):
             self.thread.start()
 
     def remove_temp_files(self):
-        if os.path.exists('Generated_Images'):
-            for file in os.listdir('Generated_Images'):
-                os.remove(os.path.join('Generated_Images', file))
-            os.rmdir('Generated_Images')
+        if os.path.exists(os.path.join(self.output_put_binary_video.text(), 'Generated_Images')):
+            for file in os.listdir(os.path.join(self.output_put_binary_video.text(), 'Generated_Images')):
+                os.remove(os.path.join(self.output_put_binary_video.text(), 'Generated_Images', file))
+            os.rmdir(os.path.join(self.output_put_binary_video.text(), 'Generated_Images'))
         QMessageBox.information(self, 'Success', 'Video has been generated successfully from binary data')
 
     def remove_extracted_frames(self):
@@ -222,13 +265,15 @@ class GenerateAndReverse(QWidget):
             os.rmdir('Extracted_Frames')
         QMessageBox.information(self, 'Success', 'Orignal file retrieved successfully')
 
+
 class GenerateVideoWorker(QObject):
     progress = pyqtSignal(int)
     finished = pyqtSignal()
 
-    def __init__(self, file_path):
+    def __init__(self, file_path, output_path):
         super().__init__()
         self.file_path = file_path
+        self.output_path = output_path
 
     def run(self):
         with open(self.file_path, 'rb') as f:
@@ -245,42 +290,40 @@ class GenerateVideoWorker(QObject):
 
         total_blocks_per_frame = blocks_per_row * blocks_per_column
         total_bits_per_frame = total_blocks_per_frame
-        total_frames = len(binary_data) // total_bits_per_frame + 1
+        total_frames = (len(binary_data) + total_bits_per_frame - 1) // total_bits_per_frame
 
         for frame_number in range(total_frames):
             start_index = frame_number * total_bits_per_frame
-            end_index = start_index + total_bits_per_frame
-            frame_data = binary_data[start_index:end_index]
+            end_index = min(start_index + total_bits_per_frame, len(binary_data))
+            frame_data = binary_data[start_index:end_index].ljust(total_bits_per_frame, '0')
 
             frame_image = Image.new('RGB', (width, height), color='white')
             draw = ImageDraw.Draw(frame_image)
 
-            for block_index in range(total_bits_per_frame):
-                if block_index < len(frame_data):
-                    binary_value = int(frame_data[block_index])
-                    color = 'white' if binary_value == 1 else 'black'
+            for block_index, binary_value in enumerate(frame_data):
+                color = 'white' if binary_value == '1' else 'black'
+                block_row = block_index // blocks_per_row
+                block_col = block_index % blocks_per_row
 
-                    block_row = block_index // blocks_per_row
-                    block_col = block_index % blocks_per_row
+                top_left_x = block_col * block_size
+                top_left_y = block_row * block_size
 
-                    top_left_x = block_col * block_size
-                    top_left_y = block_row * block_size
+                for row in range(block_size):
+                    for col in range(block_size):
+                        draw.point((top_left_x + col, top_left_y + row), fill=color)
 
-                    for row in range(block_size):
-                        for col in range(block_size):
-                            draw.point((top_left_x + col, top_left_y + row), fill=color)
+            if not os.path.exists(os.path.join(self.output_path, 'Generated_Images')):
+                os.mkdir(os.path.join(self.output_path, 'Generated_Images'))
 
-            if not os.path.exists('Generated_Images'):
-                os.mkdir('Generated_Images')
-            frame_image.save(f'Generated_Images/frame_{frame_number:09d}.png')
+            frame_image.save(os.path.join(self.output_path, f'Generated_Images/frame_{frame_number:09d}.png'))
             self.progress.emit((frame_number + 1) * 100 // total_frames)
 
         self.generate_binary_images_video()
 
     def generate_binary_images_video(self):
-        frame_dir = 'Generated_Images'
+        frame_dir = os.path.join(self.output_path, 'Generated_Images')
         frames = sorted([os.path.join(frame_dir, file) for file in os.listdir(frame_dir) if file.endswith('.png')])
-        output_video = 'output_video.mp4'
+        output_video = os.path.join(self.output_path, 'output_video.mp4')
         writer = imageio.get_writer(output_video, fps=30)
 
         for frame in frames:
