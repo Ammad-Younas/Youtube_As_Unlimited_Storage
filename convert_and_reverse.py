@@ -469,10 +469,10 @@ class ReverseVideoWorker(QObject):
 class DataBaseTab(QWidget):
     def __init__(self):
         super().__init__()
-        layout = QVBoxLayout()
-        self.label = QLabel("Database Tab Content")
-        layout.addWidget(self.label)
-        self.setLayout(layout)
+        self.init_ui()
+
+    def init_ui(self):
+        pass
 
 
 
@@ -486,7 +486,7 @@ class MainWindow(QMainWindow):
         self.database_tab = DataBaseTab()
         
         self.tabs.addTab(self.make_reverse_tab, "Make And Reverse")
-        self.tabs.addTab(self.database_tab, "Data Base")
+        # self.tabs.addTab(self.database_tab, "Data Base")
         
         self.setCentralWidget(self.tabs)
 
