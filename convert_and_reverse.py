@@ -416,7 +416,7 @@ class ReverseVideoWorker(QObject):
         blocks_per_column = height // block_size
         total_blocks_per_frame = blocks_per_row * blocks_per_column
 
-        total_frames = 0
+        total_frames = 1
         while True:
             try:
                 Image.open(os.path.join(self.output, 'Extracted_Frames', f'frame_{total_frames:09d}.png'))
